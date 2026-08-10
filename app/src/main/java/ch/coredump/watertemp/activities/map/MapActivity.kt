@@ -88,6 +88,16 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.Scroll
+import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.compose.cartesian.data.lineModel
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import kotlinx.coroutines.launch
@@ -106,7 +116,9 @@ import org.maplibre.android.plugins.annotation.SymbolOptions
 import org.ocpsoft.prettytime.PrettyTime
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
 
@@ -917,55 +929,86 @@ class MapActivity : ComponentActivity() {
 
     @Composable
     fun TemperatureChart(measurements: List<Measurement>, modifier: Modifier) {
-        AndroidView(
-            modifier = modifier,
-            factory = { context -> LineChart(context).apply {
-                // Basic styling
-                setNoDataText(context.getString(R.string.chart_no_data))
-                setDrawGridBackground(false)
-                setDrawBorders(false)
-                description.isEnabled = false
-                xAxis.isEnabled = false
-                axisRight.isEnabled = false
-            }},
-            update = { chart ->
-                // This is the start of the X axis
-                val duration = Duration.of(3, ChronoUnit.DAYS)
-                val startEpoch = Instant.now().minus(duration).toEpochMilli()
+        val dateFormatter = remember {
+            DateTimeFormatter.ofPattern("dd MMM")
+        }
 
-                // Create an entry for every measurement
-                val entries: MutableList<Entry> = ArrayList()
-                for (measurement in measurements) {
-                    val x = measurement.timestamp.toInstant().toEpochMilli() - startEpoch
-                    val y = measurement.temperature
-                    entries.add(Entry(x.toFloat(), y))
-                }
-                // See https://github.com/gfroerli/gfroerli-api/issues/40
-                entries.sortBy { it.x }
-
-                // Create a data set
-                val dataSet = LineDataSet(entries, "$labelTemperature (°C)")
-
-                // X axis value range
-                chart.xAxis.axisMinimum = 0f
-                chart.xAxis.axisMaximum = duration.toMillis().toFloat()
-
-                // Styling
-                dataSet.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
-                dataSet.lineWidth = 4f
-                dataSet.circleRadius = 2f
-                this.colorAccentAlpha?.let { dataSet.color = it }
-                dataSet.setCircleColor(dataSet.color)
-                dataSet.setDrawCircleHole(false)
-                dataSet.setDrawHighlightIndicators(false)
-
-                // Draw data
-                val data = LineData(dataSet)
-                data.setDrawValues(false)
-                chart.data = data
-                chart.invalidate()
+        val xAxisFormatter = remember {
+            CartesianValueFormatter { _, value, _ ->
+                LocalDate
+                    .from
+                    .ofEpoch(value.toLong())
+                    .format(dateFormatter)
             }
+        }
+        val modelProducer = remember { CartesianChartModelProducer() }
+        LaunchedEffect(Unit) {
+            modelProducer.runTransaction {
+                lineModel {
+                    series(measurements.map { it.timestamp.toEpochSecond() }, measurements.map { it.temperature })
+                }
+            }
+        }
+        CartesianChartHost(
+            scrollState = rememberVicoScrollState(initialScroll = Scroll.Absolute.End),
+            chart = rememberCartesianChart(
+                rememberLineCartesianLayer(),
+                startAxis = VerticalAxis.rememberStart(),
+                bottomAxis = HorizontalAxis.rememberBottom(
+                    valueFormatter = xAxisFormatter,
+                ),
+            ),
+            modelProducer = modelProducer,
         )
+//        AndroidView(
+//            modifier = modifier,
+//            factory = { context -> LineChart(context).apply {
+//                // Basic styling
+//                setNoDataText(context.getString(R.string.chart_no_data))
+//                setDrawGridBackground(false)
+//                setDrawBorders(false)
+//                description.isEnabled = false
+//                xAxis.isEnabled = false
+//                axisRight.isEnabled = false
+//            }},
+//            update = { chart ->
+//                // This is the start of the X axis
+//                val duration = Duration.of(3, ChronoUnit.DAYS)
+//                val startEpoch = Instant.now().minus(duration).toEpochMilli()
+//
+//                // Create an entry for every measurement
+//                val entries: MutableList<Entry> = ArrayList()
+//                for (measurement in measurements) {
+//                    val x = measurement.timestamp.toInstant().toEpochMilli() - startEpoch
+//                    val y = measurement.temperature
+//                    entries.add(Entry(x.toFloat(), y))
+//                }
+//                // See https://github.com/gfroerli/gfroerli-api/issues/40
+//                entries.sortBy { it.x }
+//
+//                // Create a data set
+//                val dataSet = LineDataSet(entries, "$labelTemperature (°C)")
+//
+//                // X axis value range
+//                chart.xAxis.axisMinimum = 0f
+//                chart.xAxis.axisMaximum = duration.toMillis().toFloat()
+//
+//                // Styling
+//                dataSet.mode = LineDataSet.Mode.HORIZONTAL_BEZIER
+//                dataSet.lineWidth = 4f
+//                dataSet.circleRadius = 2f
+//                this.colorAccentAlpha?.let { dataSet.color = it }
+//                dataSet.setCircleColor(dataSet.color)
+//                dataSet.setDrawCircleHole(false)
+//                dataSet.setDrawHighlightIndicators(false)
+//
+//                // Draw data
+//                val data = LineData(dataSet)
+//                data.setDrawValues(false)
+//                chart.data = data
+//                chart.invalidate()
+//            }
+//        )
     }
 
     @Composable
