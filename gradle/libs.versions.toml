@@ -21,6 +21,7 @@ mpandroidchart = "3.1.0"
 okhttp = "5.4.0"
 prettytime = "5.0.9.Final"
 retrofit = "3.0.0"
+vico = "3.2.3"
 
 [libraries]
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
@@ -50,6 +51,7 @@ prettytime = { group = "org.ocpsoft.prettytime", name = "prettytime", version.re
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 retrofit-mock = { group = "com.squareup.retrofit2", name = "retrofit-mock", version.ref = "retrofit" }
+vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

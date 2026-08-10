@@ -203,6 +203,7 @@ dependencies {
 
     // Charts
     implementation(libs.mpandroidchart)
+    implementation(libs.vico.compose)
 
     // Testing
     testImplementation(libs.junit)
