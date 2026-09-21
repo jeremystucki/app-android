@@ -40,8 +40,8 @@ android {
         applicationId = "ch.coredump.watertemp"
         applicationIdSuffix = ".zh"
         minSdk = 26
-        targetSdk = 36
-        compileSdk = 36
+        targetSdk = 37
+        compileSdk = 37
         versionCode = 23
         versionName = "1.2.0"
 
