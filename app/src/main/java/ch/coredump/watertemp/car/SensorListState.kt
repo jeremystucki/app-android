@@ -9,8 +9,6 @@ import androidx.car.app.CarContext
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import ch.coredump.watertemp.car.SensorListState.Companion.REFRESH_DISTANCE_M
-import ch.coredump.watertemp.car.SensorListState.Companion.REFRESH_INTERVAL_MS
 import ch.coredump.watertemp.rest.SensorRepository
 import kotlin.math.roundToInt
 
